@@ -38,45 +38,47 @@ def main():
 
     elif page == "Precision":
         st.header("Precision Calculation")
-        amount_present = st.text_input("Enter comma-separated measured values:")
-        if st.button("Calculate Precision"):
-            amount_present_list = [float(x.strip()) for x in amount_present.split(",")]
-            standard_deviation, relative_standard_deviation = calculate_precision(amount_present_list)
-            st.success(f"Standard Deviation: {standard_deviation:.2f}")
-            st.success(f"Relative Standard Deviation (RSD): {relative_standard_deviation:.2f}%")
+        amount_present_file = st.file_uploader("Upload CSV file with measured values", type=["csv"])
+        if amount_present_file:
+            df = pd.read_csv(amount_present_file)
+            st.write(df)  # Display the uploaded data frame
+            amount_present_list = df["Measured Values"].tolist()  # Assuming the column name is "Measured Values"
+            if st.button("Calculate Precision"):
+                standard_deviation, relative_standard_deviation = calculate_precision(amount_present_list)
+                st.success(f"Standard Deviation: {standard_deviation:.2f}")
+                st.success(f"Relative Standard Deviation (RSD): {relative_standard_deviation:.2f}%")
 
     elif page == "Recovery":
         st.header("Recovery Study")
-        absorbance_measured = st.text_input("Enter comma-separated measured absorbance values:")
-        absorbance_expected = st.text_input("Enter comma-separated expected absorbance values:")
-        if st.button("Calculate Recovery"):
-            absorbance_measured_list = [float(x.strip()) for x in absorbance_measured.split(",")]
-            absorbance_expected_list = [float(x.strip()) for x in absorbance_expected.split(",")]
-            recovery_percentages, average_recovery_percentage = calculate_recovery(absorbance_measured_list, absorbance_expected_list)
-            st.success(f"Recovery Percentages: {recovery_percentages}")
-            st.success(f"Average Recovery Percentage: {average_recovery_percentage:.2f}%")
+        absorbance_measured_file = st.file_uploader("Upload CSV file with measured absorbance values", type=["csv"])
+        absorbance_expected_file = st.file_uploader("Upload CSV file with expected absorbance values", type=["csv"])
+        if absorbance_measured_file and absorbance_expected_file:
+            df_measured = pd.read_csv(absorbance_measured_file)
+            df_expected = pd.read_csv(absorbance_expected_file)
+            st.write(df_measured)  # Display the uploaded data frames
+            st.write(df_expected)
+            absorbance_measured_list = df_measured["Measured Absorbance"].tolist()  # Assuming the column name is "Measured Absorbance"
+            absorbance_expected_list = df_expected["Expected Absorbance"].tolist()  # Assuming the column name is "Expected Absorbance"
+            if st.button("Calculate Recovery"):
+                recovery_percentages, average_recovery_percentage = calculate_recovery(absorbance_measured_list, absorbance_expected_list)
+                st.success(f"Recovery Percentages: {recovery_percentages}")
+                st.success(f"Average Recovery Percentage: {average_recovery_percentage:.2f}%")
 
     elif page == "H-Point":
         st.header("H-Point Determination")
-        # Input fields for wavelengths, concentrations, absorbance1, absorbance2
-        wavelengths = st.text_input("Enter comma-separated wavelengths:")
-        concentrations = st.text_input("Enter comma-separated concentrations:")
-        absorbance1 = st.text_input("Enter comma-separated absorbance values at wavelength 1:")
-        absorbance2 = st.text_input("Enter comma-separated absorbance values at wavelength 2:")
-    
-        if st.button("Find H-Point"):
-            # Convert input strings to lists of floats
-            wavelengths_list = [float(x.strip()) for x in wavelengths.split(",")]
-            concentrations_list = [float(x.strip()) for x in concentrations.split(",")]
-            absorbance1_list = [float(x.strip()) for x in absorbance1.split(",")]
-            absorbance2_list = [float(x.strip()) for x in absorbance2.split(",")]
-        
-            # Call the function to find H-Point
-            H_concentration, H_absorbance = find_H_point(wavelengths_list, concentrations_list, absorbance1_list, absorbance2_list)
-        
-            # Display the result
-            st.success(f"The H-point concentration is: {H_concentration:.2f}")
-            st.success(f"The H-point absorbance is: {H_absorbance:.2f}")
+        # Add file uploader for CSV file containing wavelengths, concentrations, absorbance1, absorbance2
+        data_file = st.file_uploader("Upload CSV file with data", type=["csv"])
+        if data_file:
+            df = pd.read_csv(data_file)
+            st.write(df)  # Display the uploaded data frame
+            wavelengths_list = df["Wavelengths"].tolist()  # Assuming the column name is "Wavelengths"
+            concentrations_list = df["Concentrations"].tolist()  # Assuming the column name is "Concentrations"
+            absorbance1_list = df["Absorbance1"].tolist()  # Assuming the column name is "Absorbance1"
+            absorbance2_list = df["Absorbance2"].tolist()  # Assuming the column name is "Absorbance2"
+            if st.button("Find H-Point"):
+                H_concentration, H_absorbance = find_H_point(wavelengths_list, concentrations_list, absorbance1_list, absorbance2_list)
+                st.success(f"The H-point concentration is: {H_concentration:.2f}")
+                st.success(f"The H-point absorbance is: {H_absorbance:.2f}")
 
 
     elif page == "Linear Equation":
