@@ -1,7 +1,6 @@
 import streamlit as st
 import pandas as pd
 
-# Assuming the custom modules are correctly placed in the same directory
 from accuracy import calculate_accuracy
 from purity import calculate_purity
 from precision import calculate_precision
@@ -9,6 +8,13 @@ from recovery import calculate_recovery
 from h_point import find_H_point
 from linear_equation import calculate_x
 from contour_plot import plot_contour, plot_interaction_contour
+
+def create_table_input(columns, example_data):
+    """Create a table input widget with given columns and example data."""
+    st.write(f"Enter data in the table below (columns: {', '.join(columns)}):")
+    example_df = pd.DataFrame(example_data, columns=columns)
+    df = st.data_editor(example_df, num_rows="dynamic")
+    return df
 
 def main():
     st.title("Chemistry Analysis App")
@@ -39,56 +45,48 @@ def main():
 
     elif page == "Precision":
         st.header("Precision Calculation")
-        amount_present_file = st.file_uploader("Upload CSV file with measured values", type=["csv"])
-        if amount_present_file:
-            df = pd.read_csv(amount_present_file)
-            st.write(df)  # Display the uploaded data frame
+        df = create_table_input(columns=["Measured Values"], example_data=[[10.0], [15.5], [20.0]])
+
+        if st.button("Calculate Precision"):
             if "Measured Values" in df.columns:
                 amount_present_list = df["Measured Values"].tolist()
-                if st.button("Calculate Precision"):
-                    standard_deviation, relative_standard_deviation = calculate_precision(amount_present_list)
-                    st.success(f"Standard Deviation: {standard_deviation:.5f}")
-                    st.success(f"Relative Standard Deviation (RSD): {relative_standard_deviation:.5f}%")
+                standard_deviation, relative_standard_deviation = calculate_precision(amount_present_list)
+                st.success(f"Standard Deviation: {standard_deviation:.5f}")
+                st.success(f"Relative Standard Deviation (RSD): {relative_standard_deviation:.5f}%")
             else:
-                st.error("CSV must contain a 'Measured Values' column")
+                st.error("Input must contain a 'Measured Values' column")
 
     elif page == "Recovery":
         st.header("Recovery Study")
-        absorbance_measured_file = st.file_uploader("Upload CSV file with measured absorbance values", type=["csv"])
-        absorbance_expected_file = st.file_uploader("Upload CSV file with expected absorbance values", type=["csv"])
-        if absorbance_measured_file and absorbance_expected_file:
-            df_measured = pd.read_csv(absorbance_measured_file)
-            df_expected = pd.read_csv(absorbance_expected_file)
-            st.write(df_measured)
-            st.write(df_expected)
+        df_measured = create_table_input(columns=["Measured Absorbance"], example_data=[[0.1], [0.2], [0.3]])
+        df_expected = create_table_input(columns=["Expected Absorbance"], example_data=[[0.1], [0.2], [0.3]])
+
+        if st.button("Calculate Recovery"):
             if "Measured Absorbance" in df_measured.columns and "Expected Absorbance" in df_expected.columns:
                 absorbance_measured_list = df_measured["Measured Absorbance"].tolist()
                 absorbance_expected_list = df_expected["Expected Absorbance"].tolist()
-                if st.button("Calculate Recovery"):
-                    recovery_percentages, average_recovery_percentage = calculate_recovery(absorbance_measured_list, absorbance_expected_list)
-                    st.success(f"Recovery Percentages: {recovery_percentages}")
-                    st.success(f"Average Recovery Percentage: {average_recovery_percentage:.5f}%")
+                recovery_percentages, average_recovery_percentage = calculate_recovery(absorbance_measured_list, absorbance_expected_list)
+                st.success(f"Recovery Percentages: {recovery_percentages}")
+                st.success(f"Average Recovery Percentage: {average_recovery_percentage:.5f}%")
             else:
-                st.error("CSV must contain 'Measured Absorbance' and 'Expected Absorbance' columns")
+                st.error("Input must contain 'Measured Absorbance' and 'Expected Absorbance' columns")
 
     elif page == "H-Point":
         st.header("H-Point Determination")
-        data_file = st.file_uploader("Upload CSV file with data", type=["csv"])
-        if data_file:
-            df = pd.read_csv(data_file)
-            st.write(df)
-            required_columns = {"Wavelengths", "Concentrations", "Absorbance1", "Absorbance2"}
-            if required_columns.issubset(df.columns):
+        df = create_table_input(columns=["Wavelengths", "Concentrations", "Absorbance1", "Absorbance2"],
+                                example_data=[[400, 0.5, 0.2, 0.3], [450, 0.6, 0.25, 0.35]])
+
+        if st.button("Find H-Point"):
+            if all(col in df.columns for col in ["Wavelengths", "Concentrations", "Absorbance1", "Absorbance2"]):
                 wavelengths_list = df["Wavelengths"].tolist()
                 concentrations_list = df["Concentrations"].tolist()
                 absorbance1_list = df["Absorbance1"].tolist()
                 absorbance2_list = df["Absorbance2"].tolist()
-                if st.button("Find H-Point"):
-                    H_concentration, H_absorbance = find_H_point(wavelengths_list, concentrations_list, absorbance1_list, absorbance2_list)
-                    st.success(f"The H-point concentration is: {H_concentration:.5f}")
-                    st.success(f"The H-point absorbance is: {H_absorbance:.5f}")
+                H_concentration, H_absorbance = find_H_point(wavelengths_list, concentrations_list, absorbance1_list, absorbance2_list)
+                st.success(f"The H-point concentration is: {H_concentration:.5f}")
+                st.success(f"The H-point absorbance is: {H_absorbance:.5f}")
             else:
-                st.error("CSV must contain 'Wavelengths', 'Concentrations', 'Absorbance1', and 'Absorbance2' columns")
+                st.error("Input must contain 'Wavelengths', 'Concentrations', 'Absorbance1', and 'Absorbance2' columns")
 
     elif page == "Linear Equation":
         st.header("Linear Equation Calculation")
@@ -101,34 +99,29 @@ def main():
 
     elif page == "Contour Plot":
         st.header("Contour Plot")
-        st.subheader("Upload a CSV file containing factor values:")
-        factor_file = st.file_uploader("Factor CSV file", type=["csv"])
+        df = create_table_input(columns=["Factor 1", "Factor 2", "Factor 3"], example_data=[[1, 2, 3], [4, 5, 6]])
 
-        if factor_file:
-            factor_data = pd.read_csv(factor_file)
-            if all(col in factor_data.columns for col in ["Factor 1", "Factor 2", "Factor 3"]):
-                factor1_values_list = factor_data['Factor 1'].tolist()
-                factor2_values_list = factor_data['Factor 2'].tolist()
-                factor3_values_list = factor_data['Factor 3'].tolist()
-                if st.button("Plot Contour"):
-                    plot_contour(factor1_values_list, factor2_values_list, factor3_values_list)
+        if st.button("Plot Contour"):
+            if all(col in df.columns for col in ["Factor 1", "Factor 2", "Factor 3"]):
+                factor1_values_list = df['Factor 1'].tolist()
+                factor2_values_list = df['Factor 2'].tolist()
+                factor3_values_list = df['Factor 3'].tolist()
+                plot_contour(factor1_values_list, factor2_values_list, factor3_values_list)
             else:
-                st.error("CSV must contain 'Factor 1', 'Factor 2', and 'Factor 3' columns")
+                st.error("Input must contain 'Factor 1', 'Factor 2', and 'Factor 3' columns")
 
     elif page == "Interaction Contour":
         st.header("Interaction Contour Plot")
-        factor_file = st.file_uploader("Factor CSV file", type=["csv"])
+        df = create_table_input(columns=["Factor 1", "Factor 2", "Factor 3"], example_data=[[1, 2, 3], [4, 5, 6]])
 
-        if factor_file:
-            factor_data = pd.read_csv(factor_file)
-            if all(col in factor_data.columns for col in ["Factor 1", "Factor 2", "Factor 3"]):
-                factor1_values_list = factor_data['Factor 1'].tolist()
-                factor2_values_list = factor_data['Factor 2'].tolist()
-                factor3_values_list = factor_data['Factor 3'].tolist()
-                if st.button("Interaction Contour"):
-                    plot_interaction_contour(factor1_values_list, factor2_values_list, factor3_values_list)
+        if st.button("Interaction Contour"):
+            if all(col in df.columns for col in ["Factor 1", "Factor 2", "Factor 3"]):
+                factor1_values_list = df['Factor 1'].tolist()
+                factor2_values_list = df['Factor 2'].tolist()
+                factor3_values_list = df['Factor 3'].tolist()
+                plot_interaction_contour(factor1_values_list, factor2_values_list, factor3_values_list)
             else:
-                st.error("CSV must contain 'Factor 1', 'Factor 2', and 'Factor 3' columns")
+                st.error("Input must contain 'Factor 1', 'Factor 2', and 'Factor 3' columns")
 
 if __name__ == "__main__":
     st.set_option('deprecation.showPyplotGlobalUse', False)
