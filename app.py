@@ -1,6 +1,7 @@
 import streamlit as st
 import pandas as pd
 
+# Importing the calculation functions from respective modules
 from accuracy import calculate_accuracy
 from purity import calculate_purity
 from precision import calculate_precision
@@ -13,7 +14,7 @@ def create_table_input(columns, example_data):
     """Create a table input widget with given columns and example data."""
     st.write(f"Enter data in the table below (columns: {', '.join(columns)}):")
     example_df = pd.DataFrame(example_data, columns=columns)
-    df = st.data_editor(example_df, num_rows="dynamic")
+    df = st.experimental_data_editor(example_df, num_rows="dynamic")
     return df
 
 def main():
@@ -21,14 +22,17 @@ def main():
 
     # Sidebar navigation
     st.sidebar.title("Navigation")
-    page = st.sidebar.radio("Go to", ("Accuracy", "Purity", "Precision", "Recovery", "H-Point", "Linear Equation", "Contour Plot", "Interaction Contour"))
+    page = st.sidebar.radio("Go to", 
+                            ("Accuracy", "Purity", "Precision", "Recovery", 
+                             "H-Point", "Linear Equation", "Contour Plot", 
+                             "Interaction Contour"))
 
     if page == "Accuracy":
         st.header("Accuracy Calculation")
-        absorbance = st.number_input("Absorbance", value=0.0)
-        dilution_factor = st.number_input("Dilution Factor", value=0.0)
-        avg_tablet_weight = st.number_input("Average Tablet Weight (grams)", value=0.0)
-        expected_concentration = st.number_input("Expected Concentration (mg/L)", value=0.0)
+        absorbance = st.number_input("Absorbance", value=0.0, format="%.5f")
+        dilution_factor = st.number_input("Dilution Factor", value=0.0, format="%.5f")
+        avg_tablet_weight = st.number_input("Average Tablet Weight (grams)", value=0.0, format="%.5f")
+        expected_concentration = st.number_input("Expected Concentration (mg/L)", value=0.0, format="%.5f")
 
         if st.button("Calculate Accuracy"):
             accuracy = calculate_accuracy(absorbance, dilution_factor, avg_tablet_weight, expected_concentration)
@@ -36,8 +40,8 @@ def main():
 
     elif page == "Purity":
         st.header("Percentage Purity Calculation")
-        amount_found = st.number_input("Amount Found", value=0.0)
-        label_claim = st.number_input("Label Claim", value=0.0)
+        amount_found = st.number_input("Amount Found", value=0.0, format="%.5f")
+        label_claim = st.number_input("Label Claim", value=0.0, format="%.5f")
 
         if st.button("Calculate Percentage Purity"):
             percentage_purity = calculate_purity(amount_found, label_claim)
@@ -90,9 +94,9 @@ def main():
 
     elif page == "Linear Equation":
         st.header("Linear Equation Calculation")
-        y = st.number_input("Enter the y-coordinate:", value=0.0)
-        m = st.number_input("Enter the slope (m):", value=0.0)
-        c = st.number_input("Enter the y-intercept (c):", value=0.0)
+        y = st.number_input("Enter the y-coordinate:", value=0.0, format="%.5f")
+        m = st.number_input("Enter the slope (m):", value=0.0, format="%.5f")
+        c = st.number_input("Enter the y-intercept (c):", value=0.0, format="%.5f")
         if st.button("Calculate x"):
             x = calculate_x(y, m, c)
             st.success(f"The value of x is: {x:.5f}")
